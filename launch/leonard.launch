@@ -16,18 +16,18 @@
 	<node pkg="tf" type="static_transform_publisher" name="stp_laser" output="screen" args="0.135 0 0.202 0 0 0 base_link laser 100" />
 	
 	<!-- start map server -->
-	<arg name="map_file" default="$(find lab-exercise-2)/map/CS-LG-2.yaml"/>
+	<arg name="map_file" default="$(find final-project)/map/CS-LG-2.yaml"/>
 
     <!-- Run the map server -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 	
 	<!-- run rviz -->
-    <node type="rviz" name="rviz" pkg="rviz" args="-d /data/private/robot/repos/src/lab-exercise-2/launch/assignment_2_config.rviz" />
+    <node type="rviz" name="rviz" pkg="rviz" args="-d /data/private/robot/repos/src/final-project/launch/final-project_config.rviz" />
     
     <!-- initialise particle filter node -->
-    <node name="particle_filter" pkg="lab-exercise-2" type="node.py" />
+    <node name="particle_filter" pkg="final-project" type="node.py" />
     
     <!-- start wall hugger -->
-	<node name="wall_hugger" pkg="lab-exercise-2" type="wall_hugger.py" />
+	<node name="wall_hugger" pkg="final-project" type="wall_hugger.py" />
 
 </launch>
