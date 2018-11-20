@@ -47,5 +47,8 @@ qtcreator-*
 # Emacs
 .#*
 
+/src/final-project/.DS_Store
+/src/final-project/.vscode
+
 # Catkin custom files
 CATKIN_IGNORE
