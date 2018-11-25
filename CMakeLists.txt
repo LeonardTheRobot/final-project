@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   tf
+  move_base_msgs
+  actionlib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -206,6 +208,8 @@ add_executable(tf_listener src/navigation/tf_listener.cpp)
 add_executable(laser_broadcaster src/navigation/laser_broadcaster.cpp)
 add_executable(cloud_broadcaster src/navigation/cloud_broadcaster.cpp)
 add_executable(odom_broadcaster src/navigation/odom_broadcaster.cpp)
+add_executable(simple_navigation_goals src/navigation/simple_navigation_goals.cpp)
+target_link_libraries(simple_navigation_goals ${catkin_LIBRARIES})
 target_link_libraries(tf_broadcaster ${catkin_LIBRARIES})
 target_link_libraries(tf_listener ${catkin_LIBRARIES})
 target_link_libraries(laser_broadcaster ${catkin_LIBRARIES})

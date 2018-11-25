@@ -1,0 +1,17 @@
+<launch>
+
+   	<param name="/use_sim_time" value="true"/>
+
+    <!-- transform laser co-ordinates into robot-base co-ordinate frame -->
+	<node pkg="tf" type="static_transform_publisher" name="stp_laser"  args="0.0 0.0 0.0 0 0 0 /base_link /map 1000" />
+	
+	<!-- start map server -->
+	<arg name="map_file" default="$(find final-project)/map/CS-LG-2.yaml"/>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" respawn="false" />
+
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(find final-project)/map/CS-LG-2.world" respawn="false"/>
+
+	<!-- run rviz -->
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d /data/private/robot/repos/src/final-project/launch/final-project_config.rviz" />
+    -->
+</launch> 
