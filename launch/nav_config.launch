@@ -22,7 +22,4 @@
     	<!-- Run the map server -->
     	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 	
-	<!-- run rviz -->
-    	<node type="rviz" name="rviz" pkg="rviz" args="-d /data/private/robot/repos/src/final-project/launch/final-project_config.rviz" />
-
 </launch> 

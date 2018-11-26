@@ -3,8 +3,7 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Planner Plan1/Status1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 430
   - Class: rviz/Selection
@@ -83,7 +82,7 @@ Visualization Manager:
       Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
-      Color Scheme: map
+      Color Scheme: costmap
       Draw Behind: false
       Enabled: true
       Name: Obstacles
@@ -200,25 +199,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 39.1356926
+      Distance: 25.5491352
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 15.4085903
-        Y: 13.205471
-        Z: -0.0099105835
+        X: 0.0811824799
+        Y: 0.288942099
+        Z: 0.00607299805
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.35592473
+      Pitch: 1.13692975
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.40847445
+      Yaw: 1.17036164
     Saved: ~
 Window Geometry:
   Displays:
