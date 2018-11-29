@@ -12,7 +12,8 @@ class OrderPlanner:
         rospy.Subscriber("/found_faces", String, found_faces)
         rospy.Subscriber("/interface_response", String, on_int_response)
         
-        self.status_publisher = rospy.Publisher("/order_status", String, queue_size=10)
+        self.order_status_publisher = rospy.Publisher("/order_status", String, queue_size=10)
+        self.robot_status_publisher = rospy.Publisher("/robot_status", String, queue_size=10)
         self.goal_publisher = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=10)
         self.interface_publisher = rospy.Publisher("/interface_request", String, queue_size=10)
         
