@@ -23,28 +23,6 @@ def send_pose(msg):
         data), allow_redirects=True, headers=header)
     r.raise_for_status()
 
-
-""" pub = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=10)
-    rate = rospy.Rate(0.2) # Hz - Once every 5 seconds
-
-    while not rospy.is_shutdown():
-        goal = PoseStamped()
-        goal.header.frame_id = "map"
-        goal.header.stamp = rospy.Time.now()
-        goal.pose.position.x = -7.0
-        goal.pose.position.y = 3.0
-        goal.pose.position.z = 0.0
-
-        goal.pose.orientation.x = 0.0
-        goal.pose.orientation.y = 0.0
-        goal.pose.orientation.z = 0.0
-        goal.pose.orientation.w = 1.0
-
-        #rospy.loginfo(goal)
-        pub.publish(goal)
-        rate.sleep() """
-
-
 def send_goal():
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
