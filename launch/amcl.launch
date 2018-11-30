@@ -3,9 +3,9 @@
 
     <!-- Initial Position -->
     <!--
-    <param name="initial_pose_x" value="0"/>
-    <param name="initial_pose_y" value="0"/>
-    <param name="initial_pose_a" value="0"/>
+    <param name="initial_pose_x" value="0.784"/>
+    <param name="initial_pose_y" value="1.294"/>
+    <param name="initial_pose_a" value="-0.438"/>
     -->
     
     <param name="min_particles" value="500"/>

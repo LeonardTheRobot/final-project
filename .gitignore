@@ -47,9 +47,11 @@ qtcreator-*
 # Emacs
 .#*
 
+.vscode
 src/pf_localisation/.DS_Store
 src/pf_localisation/.vscode
 src/.vscode
+include/.vscode
 
 # Catkin custom files
 CATKIN_IGNORE
