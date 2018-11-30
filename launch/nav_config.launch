@@ -22,4 +22,7 @@
     	<!-- Run the map server -->
     	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 	
+	<node pkg="final-project" type="delay_launch.sh"
+        args="3 final-project move_base.launch"
+        name="delayed_nav_launch" output="screen" />
 </launch> 

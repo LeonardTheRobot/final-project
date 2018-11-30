@@ -2,10 +2,9 @@
   <node pkg="amcl" type="amcl" name="amcl" output="screen">
 
     <!-- Initial Position -->
-    
-    <param name="initial_pose_x" value="0.784"/>
-    <param name="initial_pose_y" value="1.294"/>
-    <param name="initial_pose_a" value="-0.438"/>
+    <param name="initial_pose_x" value="0.784"/>    <!-- x-coordinate -->
+    <param name="initial_pose_y" value="1.294"/>    <!-- y-coordinate -->
+    <param name="initial_pose_a" value="-0.438"/>   <!-- orientation -->
     
     
     <param name="min_particles" value="500"/>

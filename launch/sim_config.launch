@@ -1,19 +1,18 @@
 <launch>
 
    	<arg name="map_file" default="$(find final-project)/map/CS-LG-2.yaml"/>
+    <arg name="world_file" default="$(find final-project)/map/CS-LG-2.world"/>
 
     <param name="/use_sim_time" value="true"/>
-
-    <!-- transform laser co-ordinates into robot-base co-ordinate frame -->
-	<!--
-    <node pkg="tf" type="static_transform_publisher" name="link_to_map"  args="-14.4 -12.15 0 0 0 0 /base_link /map 100" /> 
-	<node pkg="tf" type="static_transform_publisher" name="stp_laser" output="screen" args="0.135 0 0.202 0 0 0 base_link laser 100" />
-    -->
 
 	<!-- start map server -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
 
-    <node pkg="stage_ros" type="stageros" name="stageros" args="$(find final-project)/map/CS-LG-2.world">
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)">
         <param name="base_watchdog_timeout" value="0.2"/>
     </node>
+
+    <node pkg="final-project" type="delay_launch.sh"
+        args="3 final-project move_base.launch"
+        name="delayed_sim_launch" output="screen" />
 </launch> 
