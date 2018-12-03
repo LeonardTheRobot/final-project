@@ -10,12 +10,9 @@ class OrderPlanner:
         rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, got_pose)
         rospy.Subscriber("/order_list", String, plan_orders)
         rospy.Subscriber("/found_faces", String, found_faces)
-        rospy.Subscriber("/interface_response", String, on_int_response)
         
         self.order_status_publisher = rospy.Publisher("/order_status", String, queue_size=10)
-        self.robot_status_publisher = rospy.Publisher("/robot_status", String, queue_size=10)
         self.goal_publisher = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=10)
-        self.interface_publisher = rospy.Publisher("/interface_request", String, queue_size=10)
         
         self.x = 0.0
         self.y = 0.0
@@ -33,23 +30,11 @@ class OrderPlanner:
         return
         
     def found_faces(msg):
-        return
-
-    def on_int_response(msg):
-        response = j.loads(msg)
-        order_id = response['_id']
-        delivered = response['delivered']
-        
-        order = next(item for item in order_queue if item["_id"] == order_id)
-        
-        if delivered:
-            order["status"] = "COMPLETED" 
-        else:
-            order["status"] = "FAILED"
-        
-        pub.publish(j.dumps(order))
-            
-        
+        user = msg
+        users_orders = [item for item in order_queue if item["user"] == user]
+        for order in users_orders:
+            order["status"] = "COLLECTION"
+            order_status_publisher.publish(json.dumps(order))
         return
         
 
