@@ -3,53 +3,71 @@ import rospy
 import json
 import requests
 import actionlib
+import thread
+import time
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, PoseStamped, Pose
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from std_msgs.msg import String
+
+# Client used for web communication with the server
+class Client:
+    def __init__(self):
+        rospy.init_node("Client")
+        rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.send_pose)
+        rospy.Subscriber("/order_status", String, self.update_status)
+
+        self.pub = rospy.Publisher("/order_status", String, queue_size=10)
+
+        #self.url = "http://coffeebot.samchatfield.com/api/robot"
+        self.pose_url = "http://52.56.153.134/api/robot"
+        self.order_url = "http://52.56.153.134/api/orders"
+
+        self.x = 0.0
+        self.y = 0.0
+        self.delay = 5 # seconds
+        self.order_status = ""
+        self.poseSet = False
+        self.statusSet = False
+        
+        try:
+            thread.start_new_thread(self.client_thread, ())
+        except Exception as e:
+            rospy.logerr("Error: Unable to start client thread")
+            rospy.logerr(e)
+        rospy.spin()
 
 
-def send_pose(msg):
-    x = msg.pose.pose.position.x
-    y = msg.pose.pose.position.y
+    def send_pose(self, msg):
+        self.x = msg.pose.pose.position.x
+        self.y = msg.pose.pose.position.y
+        self.poseSet = True
+        #rospy.loginfo("x: {}, y: {}".format(self.x, self.y))
+        return
 
-    rospy.loginfo('x: {}, y: {}'.format(x, y))
+    def update_status(self, msg):
+        self.order_status = msg
+        self.statusSet = True
+        return
 
-    data = {"location": {"x": x, "y": y}}
+    def client_thread(self):
+        while(True):
+            if self.poseSet:
+                data = {"location": {"x": self.x, "y": self.y}}
+                header = {"Content-Type": "application/json"}
+                pose_request = requests.put(self.pose_url, data=json.dumps(data), allow_redirects=True, headers=header)
+                pose_request.raise_for_status()
+                
+            if self.statusSet:
+                header = {"Content-Type": "application/json"}
+                jsonDict = json.loads(self.order_status)
+                statusUrl = self.pose_url + jsonDict["_id"]
+                status_request = requests.put(statusUrl, data=json.dumps(self.order_status), allow_redirects=True, headers=header)
+                status_request.raise_for_status()
 
-    #url = 'http://coffeebot.samchatfield.com/api/robot'
-    url = 'http://52.56.153.134/api/robot'
-    header = {'Content-Type': 'application/json'}
-
-    r = requests.put(url, data=json.dumps(
-        data), allow_redirects=True, headers=header)
-    r.raise_for_status()
-
-def send_goal():
-
-    client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-    client.wait_for_server()
-
-    goal = MoveBaseGoal()
-    goal.target_pose.header.frame_id = "map"
-    goal.target_pose.header.stamp = rospy.Time.now()
-    goal.target_pose.pose.position.x = -7.0
-    goal.target_pose.pose.position.y = 3.0
-    goal.target_pose.pose.orientation.w = 1.0
-
-    client.send_goal(goal)
-    wait = client.wait_for_result()
-    if not wait:
-        rospy.logerr("Action Server Not Available!")
-    else:
-        client.get_result()
-        rospy.loginfo("Goal Execution done!")
-
-
-def main():
-    rospy.init_node('Client')
-    rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, send_pose)
-    send_goal()
-    rospy.spin()
-
+            orders_request = requests.get(self.order_url)
+            self.pub.publish(orders_request.text)
+            time.sleep(5)
+        return
 
 if __name__ == "__main__":
-    main()
+    client = Client()
