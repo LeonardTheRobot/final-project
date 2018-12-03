@@ -36,6 +36,20 @@ class OrderPlanner:
         return
 
     def on_int_response(msg):
+        response = j.loads(msg)
+        order_id = response['_id']
+        delivered = response['delivered']
+        
+        order = next(item for item in order_queue if item["_id"] == order_id)
+        
+        if delivered:
+            order["status"] = "COMPLETED" 
+        else:
+            order["status"] = "FAILED"
+        
+        pub.publish(j.dumps(order))
+            
+        
         return
         
 
