@@ -1,0 +1,19 @@
+<launch>
+
+   <master auto="start"/>
+   
+ <!--- Run AMCL --> 
+  <include file="$(find final-project)/launch/amcl.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find final-project)/src/navigation/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
+    <rosparam file="$(find final-project)/src/navigation/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find final-project)/src/navigation/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find final-project)/src/navigation/global_costmap_params.yaml" command="load" /> 
+    <rosparam file="$(find final-project)/src/navigation/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  <node pkg="final-project" type="delay_launch.sh"
+        args="3 final-project rviz.launch"
+        name="delayed_rviz_launch" output="screen" />
+</launch> 

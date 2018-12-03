@@ -1,0 +1,3 @@
+<launch>
+    <node type="rviz" name="rviz" pkg="rviz" args="$(find final-project)/launch/navigation_config.rviz" />
+</launch>
