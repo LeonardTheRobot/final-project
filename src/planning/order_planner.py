@@ -16,7 +16,9 @@ class OrderPlanner:
         
         self.x = 0.0
         self.y = 0.0
-        self.order_queue = []
+        self.order_queue = [] # list of order ids
+        
+        
         
 
     def got_pose(msg):
@@ -27,6 +29,10 @@ class OrderPlanner:
         return
         
     def plan_orders(msg):
+        orders = json.loads(msg)
+        for order in orders:
+            order_x = order["location"]["x"]
+            order_y = order["location"]["y"]
         return
         
     def found_faces(msg):
