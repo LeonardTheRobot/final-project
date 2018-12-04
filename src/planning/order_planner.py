@@ -6,22 +6,19 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, Pos
 
 class OrderPlanner:
     def __init__(self):
-        rospy.init_node("order_planner")
-        rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, got_pose)
-        rospy.Subscriber("/order_list", String, plan_orders)
-        rospy.Subscriber("/found_faces", String, found_faces)
+        rospy.init_node('order_planner')
+        rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, got_pose)
+        rospy.Subscriber('/order_list', String, plan_orders)
+        rospy.Subscriber('/found_faces', String, found_faces)
         
-        self.order_status_publisher = rospy.Publisher("/order_status", String, queue_size=10)
-        self.goal_publisher = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=10)
+        self.order_status_publisher = rospy.Publisher('/order_status', String, queue_size=10)
+        self.goal_publisher = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
         
         self.x = 0.0
         self.y = 0.0
         self.order_queue = [] # list of order ids
-        
-        
-        
 
-    def got_pose(msg):
+    def got_pose(self, msg):
         self.x = msg.pose.pose.position.x
         self.y = msg.pose.pose.position.y
 
@@ -31,20 +28,20 @@ class OrderPlanner:
     def plan_orders(msg):
         orders = json.loads(msg)
         for order in orders:
-            order_x = order["location"]["x"]
-            order_y = order["location"]["y"]
+            order_x = order['location']['x']
+            order_y = order['location']['y']
         return
         
     def found_faces(msg):
         user = msg
-        users_orders = [item for item in order_queue if item["user"] == user]
+        users_orders = [item for item in order_queue if item['user'] == user]
         for order in users_orders:
-            order["status"] = "COLLECTION"
+            order['status'] = 'COLLECTION'
             order_status_publisher.publish(json.dumps(order))
         return
         
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     rospy.init_node(name='order_planner')
     order_planner = OrderPlanner()
     rospy.spin()
