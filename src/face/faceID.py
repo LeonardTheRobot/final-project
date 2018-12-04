@@ -1,36 +1,22 @@
 import face_recognition
-import os
-import rospy
 import cv2
 import dlib
-# import rospkg
-from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image
+import rospy
+from std_msgs.msg import String
+import time
 
 running = True
 class FaceID():
 
     known_face_encodings=[]
     known_face_names=[]
-    
-    # path_to_package = rospack.get_path('face_recognition_pkg')
+    counter = 60
 
     def __init__(self):
+        rospy.init_node("faceRec")
         self.running = True
-        # self.rospack = rospkg.RosPack()
-        self.bridge_object = CvBridge()
-        print "start camera subscriber"
-        self.image_sub = rospy.Subscriber("/head_camera/rgb/image_raw",Image,self.camera_callback)
-
-    def camera_callback(self,data):
-        self.recognise(data)
-
-    def recognise(self,data):
-        try:
-            video_capture = self.bridge_object.imgmsg_to_cv2(data,desired_encoding="bgr8")
-            self.start("Sharkie")
-        except CvBridgeError as e:
-            print(e)
+        self.pub = rospy.Publisher("/faceID",String,queue_size=10)
+        self.currentTime = time.time()
 
     def detection(self,path):       #retun the number of face detected (for img)
         detector = dlib.get_frontal_face_detector()
@@ -66,7 +52,6 @@ class FaceID():
     def start(self,targetName):
         # Get a reference to webcam #0 (the default one)
         print "FaceID started"
-        foundTarget = False
         video_capture = cv2.VideoCapture(0)
 
         # Load a sample picture and learn how to recognize it.
@@ -81,7 +66,7 @@ class FaceID():
         face_locations = []
         face_encodings = []
         face_names = []
-        process_this_frame = True
+        # process_this_frame = True
         flag = True
         global running
         while running:
@@ -96,7 +81,10 @@ class FaceID():
                 rgb_small_frame = small_frame[:, :, ::-1]
 
                 # Only process every other frame of video to save time
-                if process_this_frame:
+                # if process_this_frame:
+                if (time.time() - self.currentTime) >= 1:
+                # if self.counter == 0:
+                    # self.counter = 60
                     # Find all the faces and face encodings in the current frame of video
                     face_locations = face_recognition.face_locations(rgb_small_frame)
                     face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
@@ -105,38 +93,39 @@ class FaceID():
                     for face_encoding in face_encodings:
                         # See if the face is a match for the known face(s)
                         matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, 0.52)
-                        name = "Unknown"
-
+                    
                         # If a match was found in known_face_encodings, just use the first one.
                         if True in matches:
                             first_match_index = matches.index(True)
                             name = self.known_face_names[first_match_index]
-                            # if name == targetName:
-                            #     foundTarget = True
+                        else:
+                            name = "Unknown"
+
+                        if (time.time() - self.currentTime) >= 1:
                             print name
+                            self.pub.publish(name)
+                        self.currentTime = time.time()
 
                         face_names.append(name)
 
-                process_this_frame = not process_this_frame
+                # process_this_frame = not process_this_frame
+                # self.counter = self.counter -1
 
 
                 # Display the results
-                if foundTarget:
-                    for (top, right, bottom, left), name in zip(face_locations, face_names):
-                        if name == targetName:
-                            # Scale back up face locations since the frame we detected in was scaled to 1/4 size
-                            top *= 4
-                            right *= 4
-                            bottom *= 4
-                            left *= 4
-
-                            # Draw a box around the face
-                            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-
-                            # Draw a label with a name below the face
-                            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-                            font = cv2.FONT_HERSHEY_DUPLEX
-                            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+                for (top, right, bottom, left), name in zip(face_locations, face_names):
+                    if matches:
+                        # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+                        top *= 4
+                        right *= 4
+                        bottom *= 4
+                        left *= 4
+                        # Draw a box around the face
+                        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                        # Draw a label with a name below the face
+                        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+                        font = cv2.FONT_HERSHEY_DUPLEX
+                        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
             # Display the resulting image
             cv2.imshow('Video', frame)
@@ -150,7 +139,6 @@ class FaceID():
         video_capture.release()
         cv2.destroyAllWindows()
 
-        return foundTarget
 
     def sample(self):
         # Get a reference to webcam #0 (the default one)
@@ -243,8 +231,4 @@ class FaceID():
 
 if __name__ == '__main__':
     print "starting"
-    rospy.init_node('faceID')
-    faceID  = FaceID()
-    rospy.spin()
-    cv2.destroyAllWindows()
-    # print(FaceID().start("Dom"))
+    print(FaceID().start("Sharkie"))
