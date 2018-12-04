@@ -1,0 +1,18 @@
+<launch>
+
+   	<arg name="map_file" default="$(find final-project)/map/CS-LG-2.yaml"/>
+    <arg name="world_file" default="$(find final-project)/map/CS-LG-2.world"/>
+
+    <param name="/use_sim_time" value="true"/>
+
+	<!-- start map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)">
+        <param name="base_watchdog_timeout" value="0.2"/>
+    </node>
+
+    <node pkg="final-project" type="delay_launch.sh"
+        args="3 final-project move_base.launch"
+        name="delayed_sim_launch" output="screen" />
+</launch> 
