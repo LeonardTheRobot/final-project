@@ -72,7 +72,7 @@ class OrderPlanner:
                                 entry["quantity"] -= quantity
                     data = {"inventory": self.inventory}
                     header = {"Content-Type": "application/json"}
-                    res = requests.put('http://52.56.153.134/api/robot', data=json.dumps(data), allow_redirects=True, headers=header)
+                    res = requests.put('http://52.56.153.134/api/robot', json=data)
                     res.raise_for_status()
                     self.collection_list.remove(order)
     
