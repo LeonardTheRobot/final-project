@@ -60,7 +60,7 @@ class OrderPlanner:
                     self.order_status_publisher.publish(json.dumps(order))
                     
                     required_items = {}
-                    for item in order:
+                    for item in order["items"]:
                         try:
                             required_items[item] += 1
                         except KeyError:
@@ -71,8 +71,10 @@ class OrderPlanner:
                             if entry["item"] == item:
                                 entry["quantity"] -= quantity
                     data = {"inventory": self.inventory}
+                    print(data)
                     res = requests.put('http://52.56.153.134/api/robot', json=data)
                     res.raise_for_status()
+                    print(res.json())
                     self.collection_list.remove(order)
     
     def order_loop(self):
