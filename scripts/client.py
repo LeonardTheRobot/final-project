@@ -47,6 +47,14 @@ class Client:
     def update_status(self, msg):
         self.order_status = msg.data
         self.statusSet = True
+        
+        print(self.order_status)
+        jsonDict = json.loads(self.order_status)
+        statusUrl = self.order_url + '/' + jsonDict["_id"]
+        status = {"status": jsonDict["status"]}
+        status_request = requests.put(statusUrl, json=status)
+        status_request.raise_for_status()
+        
         return
 
     def client_thread(self):
@@ -58,14 +66,13 @@ class Client:
                 pose_request = requests.put(self.pose_url, json=data)
                 pose_request.raise_for_status()
                 
-            if self.statusSet:
+            """if self.statusSet:
                 print(self.order_status)
                 jsonDict = json.loads(self.order_status)
                 statusUrl = self.order_url + '/' + jsonDict["_id"]
-                print(self.order_status)
                 status = {"status": jsonDict["status"]}
                 status_request = requests.put(statusUrl, json=status)
-                status_request.raise_for_status()
+                status_request.raise_for_status()"""
 
             orders_request = requests.get(self.order_url)
             self.pub.publish(orders_request.text)
