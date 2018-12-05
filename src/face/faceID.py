@@ -58,9 +58,10 @@ class FaceID():
         self.updateLib("faceLib/Aaron Yan.jpg","Aaron Yan")
         self.updateLib("faceLib/Barack Obama.jpg","Barack Obama")
         self.updateLib("faceLib/Dommm.jpg","Dom")
-        self.updateLib("faceLib/Hibboman.jpg","Hibboman")
+        self.updateLib("faceLib/Hibboman.jpg","Alex")
         self.updateLib("faceLib/Sharkie1.jpg","Sharkie")
         self.updateLib("faceLib/Sharkie2.jpg","Sharkie")
+	self.updateLib("faceLib/Siv.jpg", "Siv")
 
         # Initialize some variables
         face_locations = []
