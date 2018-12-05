@@ -55,8 +55,8 @@ class FaceID():
         video_capture = cv2.VideoCapture(0)     # 0 = labtop camera, 1 = kinect camera
 
         # Load a sample picture and learn how to recognize it.
-        self.updateLib("faceLib/Aaron Yan.jpg","Aaron Yan")
-        self.updateLib("faceLib/Barack Obama.jpg","Barack Obama")
+        # self.updateLib("faceLib/Aaron Yan.jpg","Aaron Yan")
+        # self.updateLib("faceLib/Barack Obama.jpg","Barack Obama")
         self.updateLib("faceLib/Dommm.jpg","Dom")
         self.updateLib("faceLib/Hibboman.jpg","Alex")
         self.updateLib("faceLib/Sharkie1.jpg","Sharkie")
