@@ -71,7 +71,6 @@ class OrderPlanner:
                             if entry["item"] == item:
                                 entry["quantity"] -= quantity
                     data = {"inventory": self.inventory}
-                    header = {"Content-Type": "application/json"}
                     res = requests.put('http://52.56.153.134/api/robot', json=data)
                     res.raise_for_status()
                     self.collection_list.remove(order)
@@ -83,6 +82,13 @@ class OrderPlanner:
         pending_orders = filter(lambda o: o['status'] == 'PENDING', self.order_list)
         # Plan the pending orders setting order_queue
         order_queue = in_progress_orders + self.plan_orders(pending_orders)
+        order_ids = {"orderQueue": []}
+        
+        for order in order_queue:
+            order_ids["orderQueue"].append(order["_id"])
+        res = requests.put('http://52.56.153.134/api/robot', json=order_ids)
+        res.raise_for_status()
+        
 
         if len(order_queue) == 0:
             time.sleep(5)
