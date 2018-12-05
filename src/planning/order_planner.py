@@ -47,17 +47,17 @@ class OrderPlanner:
         self.order_list = json.loads(msg)
         
     def found_faces(msg):
-        user = msg
-        users_orders = [item for item in self.collection_list if item['user'] == user]
-        if len(users_orders) == 0:
-            print "You haven't placed an order %s!" % (user)
-        else:
-            raw_input("Hi %s, pick up your order now! Once you've got it, press any key" % (user))
-            for order in users_orders:
-                order['status'] = 'COMPLETED'
-                order_status_publisher.publish(json.dumps(order))
-                self.collection_list.remove(order)
-        return
+        if len(self.collection_list) > 0:
+            user = msg
+            users_orders = [item for item in self.collection_list if item['user'] == user]
+            if len(users_orders) == 0:
+                print "You haven't placed an order %s!" % (user)
+            else:
+                raw_input("Hi %s, pick up your order now! Once you've got it, press any key" % (user))
+                for order in users_orders:
+                    order['status'] = 'COMPLETED'
+                    order_status_publisher.publish(json.dumps(order))
+                    self.collection_list.remove(order)
     
     def order_loop(self):
         """The main loop which performs order planning which loops on order completion"""
