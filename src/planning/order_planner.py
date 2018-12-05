@@ -105,6 +105,7 @@ class OrderPlanner:
             for order in self.collection_list:
                 order['status'] = 'FAILED'
                 self.order_status_publisher.publish(json.dumps(order))
+            self.collection_list = []
     
     def plan_orders(self, pending_orders):
         # TODO: account for inventory, and refilling when required
