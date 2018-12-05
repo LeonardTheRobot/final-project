@@ -16,7 +16,7 @@ class OrderPlanner:
         rospy.init_node('order_planner')
         rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.got_pose)
         rospy.Subscriber('/order_list', String, self.update_order_list)
-        rospy.Subscriber('/found_faces', String, self.found_faces)
+        rospy.Subscriber('/faceID', String, self.found_faces)
         
         self.order_status_publisher = rospy.Publisher('/order_status', String, queue_size=10)
         self.goal_publisher = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
