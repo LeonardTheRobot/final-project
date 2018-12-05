@@ -51,14 +51,13 @@ class Client:
 
     def client_thread(self):
         while(True):
+            header = {"Content-Type": "application/json"}
             if self.poseSet:
                 data = {"location": {"x": self.x, "y": self.y}}
-                header = {"Content-Type": "application/json"}
                 pose_request = requests.put(self.pose_url, data=json.dumps(data), allow_redirects=True, headers=header)
                 pose_request.raise_for_status()
                 
             if self.statusSet:
-                header = {"Content-Type": "application/json"}
                 print(self.order_status)
                 try:
                     jsonDict = json.loads(self.order_status)
@@ -66,7 +65,7 @@ class Client:
                     rospy.logerr(e)
                 statusUrl = self.order_url + '/' + jsonDict["_id"]
                 print(self.order_status)
-                status_request = requests.put(statusUrl, data=json.dumps(self.order_status), allow_redirects=True)
+                status_request = requests.put(statusUrl, data=json.dumps(self.order_status), allow_redirects=True, headers=header)
                 status_request.raise_for_status()
 
             orders_request = requests.get(self.order_url)
