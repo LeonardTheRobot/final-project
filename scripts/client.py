@@ -60,13 +60,10 @@ class Client:
                 
             if self.statusSet:
                 print(self.order_status)
-                try:
-                    jsonDict = json.loads(self.order_status)
-                except Exception as e:
-                    rospy.logerr(e)
+                jsonDict = json.loads(self.order_status)
                 statusUrl = self.order_url + '/' + jsonDict["_id"]
                 print(self.order_status)
-                status = {"status": self.order_status}
+                status = {"status": jsonDict["status"]}
                 status_request = requests.put(statusUrl, json=status)
                 status_request.raise_for_status()
 
