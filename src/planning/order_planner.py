@@ -53,7 +53,7 @@ class OrderPlanner:
             if len(users_orders) == 0:
                 print "You haven't placed an order %s!" % (user)
             else:
-                raw_input("Hi %s, pick up your order now! Once you've got it, press any key" % (user))
+                raw_input("Hi %s, pick up your order now! Once you've got it, press enter" % (user))
                 for order in users_orders:
                     order['status'] = 'COMPLETED'
                     self.order_status_publisher.publish(json.dumps(order))
@@ -85,7 +85,7 @@ class OrderPlanner:
         if order_queue[0]['zone'] == 'Pickup':
             for entry in self.inventory:
                 entry["quantity"] = 5
-            raw_input("Please refill me, then press any key")
+            raw_input("Please refill me, then press enter")
             
         else:
             for order in order_queue:
