@@ -97,7 +97,7 @@ class OrderPlanner:
                     break
             # Wait for the collection list to be emptied by the facial recognition
             t0 = time.time()
-            while len(self.collection_list) >= 0:
+            while len(self.collection_list) > 0:
                 t1 = time.time()
                 if t1 - t0 > 30:
                     break
