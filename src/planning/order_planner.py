@@ -112,6 +112,10 @@ class OrderPlanner:
             for entry in self.inventory:
                 entry["quantity"] = 5
             raw_input("Please refill me, then press enter")
+            data = {"inventory": self.inventory}
+            res = requests.put('http://52.56.153.134/api/robot', json=data)
+            res.raise_for_status()
+            print(res.json())
             
         else:
             for order in order_queue:
