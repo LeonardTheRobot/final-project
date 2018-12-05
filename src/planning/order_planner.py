@@ -27,6 +27,7 @@ class OrderPlanner:
         self.collection_list = []
         self.zones = {}
         self._get_zones()
+        self.inventory = {}
 
         while(True):
             self.order_loop()
@@ -57,6 +58,22 @@ class OrderPlanner:
                 for order in users_orders:
                     order['status'] = 'COMPLETED'
                     self.order_status_publisher.publish(json.dumps(order))
+                    
+                    required_items = {}
+                    for item in order:
+                        try:
+                            required_items[item] += 1
+                        except KeyError:
+                            required_items[item] = 1
+                    
+                    for item, quantity in required_items.iteritems():
+                        for entry in self.inventory:
+                            if entry["item"] == item:
+                                entry["quantity"] -= quantity
+                    data = {"inventory": self.inventory}
+                    header = {"Content-Type": "application/json"}
+                    res = requests.put('http://52.56.153.134/api/robot', data=json.dumps(data), allow_redirects=True, headers=header)
+                    res.raise_for_status()
                     self.collection_list.remove(order)
     
     def order_loop(self):
@@ -68,6 +85,7 @@ class OrderPlanner:
         order_queue = in_progress_orders + self.plan_orders(pending_orders)
 
         if len(order_queue) == 0:
+            time.sleep(5)
             return
 
         print('Order queue: {}'.format(order_queue))
