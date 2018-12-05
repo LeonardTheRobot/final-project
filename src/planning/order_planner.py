@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, Pos
 from datetime import datetime
 import math
 import time
+import copy
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
@@ -61,9 +62,11 @@ class OrderPlanner:
     
     def order_loop(self):
         """The main loop which performs order planning which loops on order completion"""
+        
+        in_progress_orders = filter(lambda o: o['status'] == 'IN_PROGRESS', self.order_list)
         pending_orders = filter(lambda o: o['status'] == 'PENDING', self.order_list)
         # Plan the pending orders setting order_queue
-        order_queue = self.plan_orders(pending_orders)
+        order_queue = in_progress_orders + self.plan_orders(pending_orders)
         print('Order queue: {}'.format(order_queue))
 
         goal_zone = order_queue[0]['zone']
@@ -77,21 +80,39 @@ class OrderPlanner:
         print('Out of set goal function')
 
         # Change the status of the orders at the goal to COLLECTION
-        for order in order_queue:
-            if order['zone'] == goal_zone:
-                order['status'] = 'COLLECTION'
+        if order_queue[0]['zone'] == 'Pickup':
+            for entry in self.inventory:
+                entry["quantity"] = 5
+            raw_input("Please refill me, then press any key")
+            
+        else:
+            for order in order_queue:
+                if order['zone'] == goal_zone:
+                    order['status'] = 'COLLECTION'
+                    self.order_status_publisher.publish(json.dumps(order))
+                    self.collection_list.append(order)
+                else:
+                    break
+            # Wait for the collection list to be emptied by the facial recognition
+            t0 = time.now()
+            while len(collection_list) >= 0:
+                t1 = time.now()
+                if t1 - t0 > 30:
+                    break
+                time.sleep(2)
+            for order in self.collection_list:
+                order['status'] = 'FAILED'
                 self.order_status_publisher.publish(json.dumps(order))
-                self.collection_list.append(order)
-            else:
-                break
-        # Wait for the collection list to be emptied by the facial recognition
-        while len(collection_list) >= 0:
-            time.sleep(2)
     
     def plan_orders(self, pending_orders):
         # TODO: account for inventory, and refilling when required
         current_time = datetime.now()
         order_queue = []
+        
+        res = requests.get('http://52.56.153.134/api/robot')
+        res.raise_for_status()
+        self.inventory = res.json()["inventory"]
+        working_inv = copy.deepcopy(self.inventory)
 
         while pending_orders:
             if not order_queue:
@@ -104,19 +125,53 @@ class OrderPlanner:
             
             best_order = None # Tuple (order, weight)
             for order in pending_orders:
-                weight = self.compute_weight(current_x, current_y, current_time, order)
+                required_items = {}
+                refill = False
+                for item in order["items"]:
+                    try:
+                        required_items[item] += 1
+                    except KeyError:
+                        required_items[item] = 1
+                
+                for item, quantity in required_items.iteritems():
+                    for entry in working_inv:
+                        if entry["item"] == item and quantity > entry["quantity"]:
+                            refill = True
+            
+                weight = self.compute_weight(current_x, current_y, current_time, order, refill)
                 if not best_order or weight < best_order[1]:
-                    best_order = (order, weight)
+                    best_order = (order, weight, refill)
+            
+            if best_order[2]:
+                for entry in working_inv:
+                    entry["quantity"] = 5
+                order_queue.append({"zone": "Pickup"})
+                
+            required_items = {}
+            for item in best_order[0]:
+                try:
+                    required_items[item] += 1
+                except KeyError:
+                    required_items[item] = 1
+            
+            for item, quantity in required_items.iteritems():
+                for entry in working_inv:
+                    if entry["item"] == item:
+                        entry["quantity"] -= quantity
             
             order_queue.append(best_order[0])
             pending_orders.remove(best_order[0])
 
         return order_queue
 
-    def compute_weight(self, current_x, current_y, current_t, order):
-        # TODO: account for refilling inventory
+    def compute_weight(self, current_x, current_y, current_t, order, refill):
         order_zone = self.zones[order.zone]
-        distance = math.sqrt((order_zone['x'] - current_x) ** 2 + (order_zone['y'] - current_y) ** 2)
+        
+        if refill:
+            distance = math.sqrt((self.zones["Pickup"]["x"] - current_x) ** 2 + (self.zones["Pickup"]["y"] - current_y) ** 2)
+            distance += math.sqrt((order_zone['x'] - self.zones["Pickup"]["x"]) ** 2 + (order_zone['y'] - self.zones["Pickup"]["y"]) ** 2)
+        else:
+            distance = math.sqrt((order_zone['x'] - current_x) ** 2 + (order_zone['y'] - current_y) ** 2)
 
         order_datetime = datetime.datetime.strptime(order['orderedAt'], '%Y-%m-%dT%H:%M:%S.%f%Z')
         elapsed_seconds = (current_t - order_datetime).total_seconds
