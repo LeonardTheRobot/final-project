@@ -4,12 +4,16 @@ import json
 import requests
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseWithCovariance, Pose, PoseStamped
 from datetime import datetime
+from gtts import gTTS
+from pygame import mixer
 import math
 import time
 import copy
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import String
+from std_srvs.srv import Empty
+
 
 class OrderPlanner:
     def __init__(self):
@@ -28,6 +32,8 @@ class OrderPlanner:
         self.zones = {}
         self._get_zones()
         self.inventory = {}
+        
+        self.first_try = True
 
         while(True):
             self.order_loop()
@@ -51,9 +57,17 @@ class OrderPlanner:
         if len(self.collection_list) > 0:
             user = msg.data
             users_orders = [item for item in self.collection_list if item['user'] == user]
+            print([order['user'] for order in self.collection_list])
             if len(users_orders) == 0:
                 print "You haven't placed an order %s!" % (user)
             else:
+                speech = "Hello %s, pick up your order." % (user)
+                tts = gTTS(speech)
+                filename = 'speech.mp3'
+                tts.save(filename)
+                mixer.init()
+                mixer.music.load(filename)
+                mixer.music.play()
                 raw_input("Hi %s, pick up your order now! Once you've got it, press enter" % (user))
                 for order in users_orders:
                     order['status'] = 'COMPLETED'
@@ -87,7 +101,8 @@ class OrderPlanner:
         order_ids = {"orderQueue": []}
         
         for order in order_queue:
-            order_ids["orderQueue"].append(order["_id"])
+            if not order["zone"] == "Pickup":
+                order_ids["orderQueue"].append(order["_id"])
         res = requests.put('http://52.56.153.134/api/robot', json=order_ids)
         res.raise_for_status()
         
@@ -99,46 +114,66 @@ class OrderPlanner:
         print('Order queue: {}'.format(order_queue))
         goal_zone = order_queue[0]['zone']
         for order in order_queue:
-            if order['zone'] == goal_zone:
+            if goal_zone == 'Pickup':
+                goal_zone = order_queue[1]['zone']
+            elif order['zone'] == goal_zone:
                 order['status'] = 'IN_PROGRESS'
                 self.order_status_publisher.publish(json.dumps(order))
             else:
                 break
-        self.set_goal(order_queue[0])
+        state = self.set_goal(order_queue[0])
         print('Out of set goal function')
-
-        # Change the status of the orders at the goal to COLLECTION
-        if order_queue[0]['zone'] == 'Pickup':
-            for entry in self.inventory:
-                entry["quantity"] = 5
-            raw_input("Please refill me, then press enter")
-            data = {"inventory": self.inventory}
-            res = requests.put('http://52.56.153.134/api/robot', json=data)
-            res.raise_for_status()
-            print(res.json())
-            
-        else:
-            for order in order_queue:
-                if order['zone'] == goal_zone:
-                    order['status'] = 'COLLECTION'
+        # TODO - Check if robot is within certain distance of goal
+        if not state == 4:
+            # Change the status of the orders at the goal to COLLECTION
+            if order_queue[0]['zone'] == 'Pickup':
+                for entry in self.inventory:
+                    entry["quantity"] = 5
+                speech = "I need a refill."
+                tts = gTTS(speech)
+                filename = 'speech.mp3'
+                tts.save(filename)
+                mixer.init()
+                mixer.music.load(filename)
+                mixer.music.play()
+                raw_input("Please refill me, then press enter")
+                data = {"inventory": self.inventory}
+                res = requests.put('http://52.56.153.134/api/robot', json=data)
+                res.raise_for_status()
+                print(res.json())
+                
+            else:
+                print("delivering order")
+                for order in order_queue:
+                    if order['zone'] == goal_zone:
+                        order['status'] = 'COLLECTION'
+                        self.order_status_publisher.publish(json.dumps(order))
+                        self.collection_list.append(order)
+                    else:
+                        break
+                # Wait for the collection list to be emptied by the facial recognition
+                t0 = time.time()
+                while len(self.collection_list) > 0:
+                    t1 = time.time()
+                    if t1 - t0 > 30:
+                        break
+                    time.sleep(2)
+                for order in self.collection_list:
+                    order['status'] = 'FAILED'
                     self.order_status_publisher.publish(json.dumps(order))
-                    self.collection_list.append(order)
-                else:
-                    break
-            # Wait for the collection list to be emptied by the facial recognition
-            t0 = time.time()
-            while len(self.collection_list) > 0:
-                t1 = time.time()
-                if t1 - t0 > 30:
-                    break
-                time.sleep(2)
-            for order in self.collection_list:
-                order['status'] = 'FAILED'
-                self.order_status_publisher.publish(json.dumps(order))
-            self.collection_list = []
+                self.collection_list = []
+        else:
+            print("Failed to deliver order, code %d" % state)
+            if not order_queue[0]['zone'] == 'Pickup':
+                for order in order_queue:
+                    if order['zone'] == goal_zone:
+                        order['status'] = 'FAILED'
+                        self.order_status_publisher.publish(json.dumps(order))
+                    else:
+                        break
+                
     
     def plan_orders(self, pending_orders):
-        # TODO: account for inventory, and refilling when required
         current_time = datetime.now()
         order_queue = []
         
@@ -226,11 +261,28 @@ class OrderPlanner:
 
         client.send_goal(goal)
         wait = client.wait_for_result()
+        state = 4
         if not wait:
             rospy.logerr("Action Server Not Available!")
         else:
-            client.get_result()
-            rospy.loginfo("Goal Execution done!")
+            print(client.get_goal_status_text())
+            state = client.get_state()
+            print(state)
+            if state == 4 and self.first_try:
+                print("Failed to deliver, attempting redelivery")
+                self.first_try = False
+                # rospy.wait_for_service('clear_costmaps')
+                clear_costmaps = rospy.ServiceProxy('move_base/clear_costmaps', Empty)
+                try:
+                    clear_costmaps()
+                    time.sleep(2)
+                    self.set_goal(order)
+                except rospy.ServiceException as e:
+                    print("Failed to clear costmap: " + str(e))
+            else:
+                rospy.loginfo("Goal Execution done!")
+                self.first_try = True
+        return state
 
 if __name__ == '__main__':
     rospy.init_node(name='order_planner')
