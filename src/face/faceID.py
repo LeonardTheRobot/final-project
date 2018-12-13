@@ -49,18 +49,19 @@ class FaceID():
             print "This shouldn't happen"
             return False
 
-    def start(self):
+    def start(self,i):
         # Get a reference to webcam #0 (the default one)
         print "FaceID started"
-        video_capture = cv2.VideoCapture(0)     # 0 = labtop camera, 1 = kinect camera
+        video_capture = cv2.VideoCapture(i)
 
         # Load a sample picture and learn how to recognize it.
-        self.updateLib("faceLib/Aaron Yan.jpg","Aaron Yan")
-        self.updateLib("faceLib/Barack Obama.jpg","Barack Obama")
+        # self.updateLib("faceLib/Aaron Yan.jpg","Aaron Yan")
+        # self.updateLib("faceLib/Barack Obama.jpg","Barack Obama")
         self.updateLib("faceLib/Dommm.jpg","Dom")
-        self.updateLib("faceLib/Hibboman.jpg","Hibboman")
+        self.updateLib("faceLib/Hibboman.jpg","Alex")
         self.updateLib("faceLib/Sharkie1.jpg","Sharkie")
         self.updateLib("faceLib/Sharkie2.jpg","Sharkie")
+	self.updateLib("faceLib/Siv.jpg", "Siv")
 
         # Initialize some variables
         face_locations = []
@@ -146,4 +147,4 @@ class FaceID():
 
 if __name__ == '__main__':
     print "starting"
-    FaceID().start()
+    FaceID().start(1)    # 0 = labtop camera, 1 = kinect camera

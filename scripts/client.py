@@ -16,7 +16,7 @@ class Client:
         rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.send_pose)
         rospy.Subscriber("/order_status", String, self.update_status)
 
-        self.pub = rospy.Publisher("/order_status", String, queue_size=10)
+        self.pub = rospy.Publisher("/order_list", String, queue_size=10)
 
         #self.url = "http://coffeebot.samchatfield.com/api/robot"
         self.pose_url = "http://52.56.153.134/api/robot"
@@ -45,24 +45,34 @@ class Client:
         return
 
     def update_status(self, msg):
-        self.order_status = msg
+        self.order_status = msg.data
         self.statusSet = True
+        
+        print(self.order_status)
+        jsonDict = json.loads(self.order_status)
+        statusUrl = self.order_url + '/' + jsonDict["_id"]
+        status = {"status": jsonDict["status"]}
+        status_request = requests.put(statusUrl, json=status)
+        status_request.raise_for_status()
+        
         return
 
     def client_thread(self):
         while(True):
+            header = {"Content-Type": "application/json"}
             if self.poseSet:
                 data = {"location": {"x": self.x, "y": self.y}}
-                header = {"Content-Type": "application/json"}
-                pose_request = requests.put(self.pose_url, data=json.dumps(data), allow_redirects=True, headers=header)
+                # pose_request = requests.put(self.pose_url, data=data, allow_redirects=True, headers=header)
+                pose_request = requests.put(self.pose_url, json=data)
                 pose_request.raise_for_status()
                 
-            if self.statusSet:
-                header = {"Content-Type": "application/json"}
+            """if self.statusSet:
+                print(self.order_status)
                 jsonDict = json.loads(self.order_status)
-                statusUrl = self.pose_url + jsonDict["_id"]
-                status_request = requests.put(statusUrl, data=json.dumps(self.order_status), allow_redirects=True, headers=header)
-                status_request.raise_for_status()
+                statusUrl = self.order_url + '/' + jsonDict["_id"]
+                status = {"status": jsonDict["status"]}
+                status_request = requests.put(statusUrl, json=status)
+                status_request.raise_for_status()"""
 
             orders_request = requests.get(self.order_url)
             self.pub.publish(orders_request.text)
